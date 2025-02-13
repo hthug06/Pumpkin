@@ -10,7 +10,7 @@ use crate::world::World;
 use args::ConsumedArgs;
 use async_trait::async_trait;
 use commands::{
-    ban, banip, banlist, clear, damage, deop, experience, fill, gamemode, give, help, kick, kill,
+    ban, banip, banlist, clear, damage,defaultgamemode, deop, experience, fill, gamemode, give, help, kick, kill,
     list, me, msg, op, pardon, pardonip, particle, playsound, plugin, plugins, pumpkin, say,
     setblock, stop, summon, teleport, time, title, weather, worldborder,
 };
@@ -137,6 +137,7 @@ pub fn default_dispatcher() -> CommandDispatcher {
     dispatcher.register(bossbar::init_command_tree(), PermissionLvl::Two);
     dispatcher.register(say::init_command_tree(), PermissionLvl::Two);
     dispatcher.register(gamemode::init_command_tree(), PermissionLvl::Two);
+    dispatcher.register(defaultgamemode::init_command_tree(), PermissionLvl::Two);
     // Three
     dispatcher.register(op::init_command_tree(), PermissionLvl::Three);
     dispatcher.register(deop::init_command_tree(), PermissionLvl::Three);
