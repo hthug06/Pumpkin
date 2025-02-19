@@ -11,8 +11,6 @@ use std::{
     path::Path,
     sync::LazyLock,
 };
-use std::sync::{Arc, Mutex};
-
 pub mod logging;
 pub mod networking;
 

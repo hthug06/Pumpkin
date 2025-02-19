@@ -28,7 +28,7 @@ impl CommandExecutor for DefaultGamemodeExecutor {
         args: &ConsumedArgs<'a>,
     ) -> Result<(), CommandError> {
 
-        let Some(Arg::GameMode(mut gamemode)) = args.get_cloned(&ARG_GAMEMODE) else {
+        let Some(Arg::GameMode(gamemode)) = args.get_cloned(&ARG_GAMEMODE) else {
             return Err(InvalidConsumption(Some(ARG_GAMEMODE.into())));
         };
 
@@ -46,9 +46,9 @@ impl CommandExecutor for DefaultGamemodeExecutor {
         sender
             .send_message(TextComponent::translate(
                 "commands.defaultgamemode.success", [
-                    TextComponent::translate(gamemode_string, [].into()),
+                    TextComponent::translate(gamemode_string, []),
                 ]
-                    .into(),
+                    ,
             ))
             .await;
 
