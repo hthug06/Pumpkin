@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use pumpkin_config::BasicConfiguration;
 use pumpkin_util::text::TextComponent;
 use crate::{
     command::{
@@ -27,13 +28,17 @@ impl CommandExecutor for DefaultGamemodeExecutor {
         args: &ConsumedArgs<'a>,
     ) -> Result<(), CommandError> {
 
-        let Some(Arg::GameMode(gamemode)) = args.get_cloned(&ARG_GAMEMODE) else {
+        let Some(Arg::GameMode(mut gamemode)) = args.get_cloned(&ARG_GAMEMODE) else {
             return Err(InvalidConsumption(Some(ARG_GAMEMODE.into())));
         };
 
-        for player in server.get_all_players().await {
-            player.set_gamemode(gamemode).await;
+        if BasicConfiguration::default().force_gamemode {
+
+            for player in server.get_all_players().await {
+                player.set_gamemode(gamemode).await;
+            }
         }
+
 
         let gamemode_string = format!("{gamemode:?}").to_lowercase();
         let gamemode_string = format!("gameMode.{gamemode_string}");
@@ -46,6 +51,10 @@ impl CommandExecutor for DefaultGamemodeExecutor {
                     .into(),
             ))
             .await;
+
+        //TODO
+        // Set the new default gamemode in the configuration.toml
+
         Ok(())
     }
 }
