@@ -112,10 +112,8 @@ impl Server {
         );
 
         // Spawn chunks are never unloaded
-        for x in -1..=1 {
-            for z in -1..=1 {
-                world.level.mark_chunk_as_newly_watched(Vector2::new(x, z));
-            }
+        for chunk in Self::spawn_chunks() {
+            world.level.mark_chunk_as_newly_watched(chunk);
         }
 
         Self {
@@ -142,6 +140,14 @@ impl Server {
             server_branding: CachedBranding::new(),
             bossbars: Mutex::new(CustomBossbars::new()),
         }
+    }
+
+    const SPAWN_CHUNK_RADIUS: i32 = 1;
+
+    pub fn spawn_chunks() -> impl Iterator<Item = Vector2<i32>> {
+        (-Self::SPAWN_CHUNK_RADIUS..=Self::SPAWN_CHUNK_RADIUS).flat_map(|x| {
+            (-Self::SPAWN_CHUNK_RADIUS..=Self::SPAWN_CHUNK_RADIUS).map(move |z| Vector2::new(x, z))
+        })
     }
 
     /// Adds a new player to the server.
@@ -200,6 +206,8 @@ impl Server {
         for world in self.worlds.read().await.iter() {
             world.save().await;
         }
+
+        log::info!("Completed world save");
     }
 
     /// Adds a new living entity to the server. This does not Spawn the entity
@@ -357,7 +365,7 @@ impl Server {
         let mut players = Vec::<Arc<Player>>::new();
 
         for world in self.worlds.read().await.iter() {
-            for (_, player) in world.players.lock().await.iter() {
+            for (_, player) in world.players.read().await.iter() {
                 if player.client.address.lock().await.ip() == ip {
                     players.push(player.clone());
                 }
@@ -372,7 +380,7 @@ impl Server {
         let mut players = Vec::<Arc<Player>>::new();
 
         for world in self.worlds.read().await.iter() {
-            for (_, player) in world.players.lock().await.iter() {
+            for (_, player) in world.players.read().await.iter() {
                 players.push(player.clone());
             }
         }
@@ -418,7 +426,7 @@ impl Server {
     pub async fn get_player_count(&self) -> usize {
         let mut count = 0;
         for world in self.worlds.read().await.iter() {
-            count += world.players.lock().await.len();
+            count += world.players.read().await.len();
         }
         count
     }
@@ -427,7 +435,7 @@ impl Server {
     pub async fn has_n_players(&self, n: usize) -> bool {
         let mut count = 0;
         for world in self.worlds.read().await.iter() {
-            count += world.players.lock().await.len();
+            count += world.players.read().await.len();
             if count >= n {
                 return true;
             }
