@@ -21,7 +21,7 @@ use pumpkin_util::text::TextComponent;
 
 pub mod args;
 pub mod client_suggestions;
-mod commands;
+pub mod commands;
 pub mod dispatcher;
 pub mod tree;
 
