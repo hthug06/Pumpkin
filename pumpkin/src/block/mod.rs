@@ -30,6 +30,7 @@ use blocks::plant::mushroom_plant::MushroomPlantBlock;
 use blocks::plant::sapling::SaplingBlock;
 use blocks::plant::short_plant::ShortPlantBlock;
 use blocks::plant::tall_plant::TallPlantBlock;
+use blocks::pointed_dripstone::PointedDripStoneBlock;
 use blocks::pumpkin::PumpkinBlock;
 use blocks::redstone::buttons::ButtonBlock;
 use blocks::redstone::observer::ObserverBlock;
@@ -100,6 +101,7 @@ pub fn default_registry() -> Arc<BlockRegistry> {
     manager.register(CraftingTableBlock);
     manager.register(DirtPathBlock);
     manager.register(DoorBlock);
+    manager.register(PointedDripStoneBlock);
     manager.register(FarmLandBlock);
     manager.register(FenceGateBlock);
     manager.register(FenceBlock);

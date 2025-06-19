@@ -22,6 +22,7 @@ pub mod nether_portal;
 pub mod note;
 pub mod piston;
 pub mod plant;
+pub mod pointed_dripstone;
 pub mod pumpkin;
 pub mod redstone;
 pub mod sea_pickles;
