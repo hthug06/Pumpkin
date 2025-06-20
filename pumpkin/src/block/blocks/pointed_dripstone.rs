@@ -12,7 +12,9 @@ use pumpkin_macros::pumpkin_block;
 use pumpkin_protocol::server::play::SUseItemOn;
 use pumpkin_util::math::position::BlockPos;
 use pumpkin_world::BlockStateId;
-use pumpkin_world::world::BlockAccessor;
+use pumpkin_world::chunk::TickPriority;
+use pumpkin_world::world::{BlockAccessor, BlockFlags};
+use std::sync::Arc;
 
 #[pumpkin_block("minecraft:pointed_dripstone")]
 pub struct PointedDripStoneBlock;
@@ -63,16 +65,17 @@ impl PumpkinBlock for PointedDripStoneBlock {
         _player: Option<&Player>,
         _block: &Block,
         block_pos: &BlockPos,
-        _face: BlockDirection,
+        face: BlockDirection,
         _use_item_on: Option<&SUseItemOn>,
     ) -> bool {
-        !block_accessor
+        block_accessor
             .get_block_state(&block_pos.down())
             .await
-            .is_air()
+            .is_side_solid(face)
             || block_accessor
                 .get_block_state(&block_pos.up())
                 .await
-                .is_air()
+                .is_side_solid(face)
+            || block_accessor.get_block(&block_pos.down()).await == Block::POINTED_DRIPSTONE
     }
 }
