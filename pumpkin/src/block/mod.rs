@@ -83,6 +83,7 @@ use crate::world::World;
 use crate::{block::blocks::crafting_table::CraftingTableBlock, entity::player::Player};
 use crate::{block::blocks::jukebox::JukeboxBlock, entity::experience_orb::ExperienceOrbEntity};
 use std::sync::Arc;
+use crate::block::blocks::snow::SnowBlock;
 
 pub mod blocks;
 mod fluid;
@@ -147,6 +148,7 @@ pub fn default_registry() -> Arc<BlockRegistry> {
     manager.register(EndPortalFrameBlock);
     manager.register(SeaPickleBlock);
     manager.register(SkullBlock);
+    manager.register(SnowBlock);
 
     // Fire
     manager.register(SoulFireBlock);
