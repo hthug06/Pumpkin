@@ -1,8 +1,7 @@
-
 // Trait because chart_data
-pub trait CustomChart: Sized{
+pub trait CustomChart: Sized {
     async fn id(&self) -> &str;
-    async fn chart(&self){}
+    async fn chart(&self) {}
 }
 
 // need this because they do a class in a class
@@ -41,7 +40,7 @@ impl BarChart {
 }
 
 impl CustomChart for BarChart {
-    async fn id(&self) -> &str {self.chart.id.as_str()}
-    
+    async fn id(&self) -> &str {
+        self.chart.id.as_str()
+    }
 }
-

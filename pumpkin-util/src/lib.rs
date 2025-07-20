@@ -10,6 +10,7 @@ pub mod difficulty;
 pub mod gamemode;
 pub mod loot_table;
 pub mod math;
+pub mod metrics;
 pub mod noise;
 pub mod permission;
 pub mod random;
@@ -18,7 +19,6 @@ pub mod resource_location;
 pub mod serde_enum_as_integer;
 pub mod text;
 pub mod translation;
-pub mod metrics;
 
 #[derive(Deserialize, Clone, Copy, Debug, PartialEq)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]

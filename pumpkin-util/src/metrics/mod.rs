@@ -1,23 +1,24 @@
 mod chart;
 
-use os_info;
-use scheduling::Scheduler;
-use serde_json::{json, Map};
-use flate2::write::GzEncoder;
+use crate::metrics::chart::CustomChart;
 use flate2::Compression;
-use std::io::{ErrorKind, Write};
-use std::sync::{Arc, Mutex};
-use log::{logger, Log};
+use flate2::write::GzEncoder;
+use log::Log;
+use os_info;
 use reqwest::Error;
-use crate::metrics::chart::{Chart, CustomChart};
+use serde_json::{Map, json};
+use std::io::Write;
+use std::time::Duration;
+use tokio_task_scheduler::{Scheduler, TaskBuilder};
 
+//Trying to replic Metrics.java from Paper
 pub struct Metrics {
     b_stats_version: u8,
     url: String,
     log_failed_request: bool,
     name: String, // The name of the server software
     uuid: String, // The uuid of the server
-    //charts: [dyn CustomChart; 6] TODO only used for plugin
+                  //charts: [dyn CustomChart; 6] TODO only used for plugin
 }
 
 impl Metrics {
@@ -33,19 +34,32 @@ impl Metrics {
     }
 
     //Starts the Scheduler which submits our data every 30 minutes.
-    async fn start_submitting(self: Arc<Mutex<Self>>) {
-        let initial_delay: u64 = 1000 * 60 * (3 + rand::random::<u64>() * 3);
-        let second_delay: u64 = 1000 * 60 * (3 + rand::random::<u64>() * 30);
+    async fn start_submitting(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let initial_delay: u64 = /*1000 millis*/ * 60 * (3 + rand::random::<u64>() * 3); // in second
+        let second_delay: u64 = /*1000 millis*/ * 60 * (3 + rand::random::<u64>() * 30); //in second
 
-        Scheduler::delayed_once(std::time::Duration::from_millis(initial_delay), || {
-            self.lock().unwrap().submit_data().await;
-        }).start();
+        let scheduler = Scheduler::new();
 
-        let submit_task = Scheduler::delayed_recurring(
-            std::time::Duration::from_millis(initial_delay + second_delay),
-            std::time::Duration::from_millis(1000 * 60 * 30),
-            || println!("1 SEC ELAPSED"),
-        );
+        //create the timer
+        let scheduled_task = TaskBuilder::new("scheduled_task", async || {
+            self.submit_data().await;
+            Ok(())
+        })
+        .every_seconds(60 * 30)
+        .build();
+
+        // Wait for a short duration
+        tokio::time::sleep(Duration::from_secs(initial_delay)).await;
+        self.submit_data().await;
+        tokio::time::sleep(Duration::from_secs(second_delay)).await;
+
+        // Add task to the scheduler
+        scheduler.add_task(scheduled_task).await?;
+
+        // Start the scheduler
+        let mut rx = scheduler.start().await;
+
+        Ok(())
     }
 
     //Gets the plugin specific data.
@@ -57,7 +71,7 @@ impl Metrics {
     }
 
     //Gets the server specific data.
-    async fn server_data(&self) -> Option<serde_json::Value>{
+    async fn server_data(&self) -> Option<serde_json::Value> {
         let info = os_info::get();
 
         let os_name = info.os_type();
@@ -94,38 +108,44 @@ impl Metrics {
             Err(e) => eprintln!("{}", e),
             _ => (),
         }
-
     }
 
     // Send the data to bStats server
-    async fn send_data(&self, data:  Option<serde_json::Value>) -> Result<(), Error>{
+    async fn send_data(&self, data: Option<serde_json::Value>) -> Result<(), Error> {
         let client = reqwest::Client::new();
 
         // Compress the data to save bandwidth
-        let compressed_data = Self::compress(data.ok_or("Data can't be null for bstats").unwrap().to_string()).await;
+        let compressed_data = Self::compress(
+            data.ok_or("Data can't be null for bstats")
+                .unwrap()
+                .to_string(),
+        )
+        .await;
 
         // Add headers and send data
-        let request = client.post(self.url.as_str())
+        let request = client
+            .post(self.url.as_str())
             .json(&json!({
-            "Accept": "application/json",
-            "Connection": "close",
-            "Content-Encoding": "gzip",
-            "Content-Length": compressed_data.len(),
-            "Content-Type": "application/json",
-            "User-Agent": "MC-Server/".to_owned() + self.b_stats_version.to_string().as_str()
-        })).send().await?;
+                "Accept": "application/json",
+                "Connection": "close",
+                "Content-Encoding": "gzip",
+                "Content-Length": compressed_data.len(),
+                "Content-Type": "application/json",
+                "User-Agent": "MC-Server/".to_owned() + self.b_stats_version.to_string().as_str()
+            }))
+            .send()
+            .await?;
 
         Ok(())
-
     }
 
     //Gzips the given String.
-    async fn compress(str: String) -> Vec<u64>{
+    async fn compress(str: String) -> Vec<u64> {
         if str == "" {
             return vec![];
         }
 
-        let output_stream:Vec<u64> = Vec::new();
+        let output_stream: Vec<u64> = Vec::new();
         let mut gzip = GzEncoder::new(Vec::new(), Compression::default());
         gzip.write(str.as_bytes()).unwrap();
         gzip.try_finish().unwrap();

@@ -22,7 +22,7 @@ enum_dispatch = "0.3.13"
 uuid.workspace = true
 tokio.workspace = true
 
-scheduling = "0.1.2"
+tokio-task-scheduler = "1.0.0"
 rand = "0.9.1"
 os_info = "3.12.0"
 num_cpus = "1.17.0"
