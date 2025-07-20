@@ -10,7 +10,6 @@ pub mod difficulty;
 pub mod gamemode;
 pub mod loot_table;
 pub mod math;
-pub mod metrics;
 pub mod noise;
 pub mod permission;
 pub mod random;

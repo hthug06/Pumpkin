@@ -1,15 +1,16 @@
-mod chart;
+mod charts;
 
-use crate::metrics::chart::CustomChart;
+use crate::SHOULD_STOP;
 use flate2::Compression;
 use flate2::write::GzEncoder;
-use log::Log;
 use os_info;
 use reqwest::Error;
 use serde_json::{Map, json};
 use std::io::Write;
+use std::sync::atomic::Ordering;
 use std::time::Duration;
-use tokio_task_scheduler::{Scheduler, TaskBuilder};
+use tokio::time::interval;
+use uuid::Uuid;
 
 //Trying to replic Metrics.java from Paper
 pub struct Metrics {
@@ -34,32 +35,25 @@ impl Metrics {
     }
 
     //Starts the Scheduler which submits our data every 30 minutes.
-    async fn start_submitting(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let initial_delay: u64 = /*1000 millis*/ * 60 * (3 + rand::random::<u64>() * 3); // in second
-        let second_delay: u64 = /*1000 millis*/ * 60 * (3 + rand::random::<u64>() * 30); //in second
-
-        let scheduler = Scheduler::new();
-
-        //create the timer
-        let scheduled_task = TaskBuilder::new("scheduled_task", async || {
-            self.submit_data().await;
-            Ok(())
-        })
-        .every_seconds(60 * 30)
-        .build();
+    async fn start_submitting(&self) {
+        let initial_delay: u64 = 1000 * 60 * (3 + rand::random::<u64>() * 3);
+        let second_delay: u64 = 1000 * 60 * (3 + rand::random::<u64>() * 30);
 
         // Wait for a short duration
-        tokio::time::sleep(Duration::from_secs(initial_delay)).await;
+        tokio::time::sleep(Duration::from_millis(initial_delay)).await;
         self.submit_data().await;
-        tokio::time::sleep(Duration::from_secs(second_delay)).await;
+        tokio::time::sleep(Duration::from_millis(second_delay)).await;
 
-        // Add task to the scheduler
-        scheduler.add_task(scheduled_task).await?;
+        // Créez un intervalle qui se déclenche toutes les 2 secondes
+        let mut interval = interval(Duration::from_millis(1000 * 60 * 30));
 
-        // Start the scheduler
-        let mut rx = scheduler.start().await;
-
-        Ok(())
+        // Boucle sur l'intervalle
+        loop {
+            interval.tick().await;
+            if !SHOULD_STOP.load(Ordering::Relaxed) {
+                self.submit_data().await;
+            }
+        }
     }
 
     //Gets the plugin specific data.
@@ -123,7 +117,7 @@ impl Metrics {
         .await;
 
         // Add headers and send data
-        let request = client
+        let _request = client
             .post(self.url.as_str())
             .json(&json!({
                 "Accept": "application/json",
@@ -150,5 +144,16 @@ impl Metrics {
         gzip.write(str.as_bytes()).unwrap();
         gzip.try_finish().unwrap();
         output_stream
+    }
+}
+
+pub struct PumpkinMetrics;
+
+impl PumpkinMetrics {
+    async fn start_metrics() {
+        //TODO Create the config file
+        let uuid = Uuid::new_v4();
+
+        let _metrics = Metrics::new("Pumpkin".to_string(), uuid.to_string(), false).await;
     }
 }

@@ -12,6 +12,7 @@ use tokio::sync::RwLock;
 
 pub mod api;
 pub mod loader;
+pub mod metrics;
 
 use crate::{PERMISSION_MANAGER, server::Server};
 pub use api::*;
