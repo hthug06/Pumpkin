@@ -1,6 +1,6 @@
-mod advanced_bar_chart;
-mod advanced_pie;
-mod drilldown_pie;
+pub mod advanced_bar_chart;
+pub mod advanced_pie;
+pub mod drilldown_pie;
 pub mod multi_line_chart;
 pub mod simple_bar_chart;
 pub mod simple_pie;

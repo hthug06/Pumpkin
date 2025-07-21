@@ -27,6 +27,7 @@ use tokio::net::{TcpListener, UdpSocket};
 use tokio::select;
 use tokio::sync::{Mutex, Notify, RwLock};
 use tokio_util::task::TaskTracker;
+use crate::plugin::metrics::PumpkinMetrics;
 
 pub mod block;
 pub mod command;
@@ -241,6 +242,9 @@ impl PumpkinServer {
         let udp_socket = UdpSocket::bind(BASIC_CONFIG.bedrock_edition_address)
             .await
             .expect("Failed to bind UDP Socket");
+
+        //bstats
+        PumpkinMetrics::start_metrics(&server).await;
 
         Self {
             server: server.clone(),
