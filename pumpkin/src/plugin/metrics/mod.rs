@@ -3,6 +3,7 @@ mod charts;
 use crate::SHOULD_STOP;
 use crate::plugin::metrics::charts::CustomChart;
 use crate::plugin::metrics::charts::simple_pie::SimplePie;
+use crate::server::CURRENT_MC_VERSION;
 use flate2::Compression;
 use flate2::write::GzEncoder;
 use os_info;
@@ -13,7 +14,6 @@ use std::sync::atomic::Ordering;
 use std::time::Duration;
 use tokio::time::interval;
 use uuid::Uuid;
-use crate::server::CURRENT_MC_VERSION;
 
 //Trying to replic Metrics.java from Paper
 pub struct Metrics {
@@ -162,8 +162,10 @@ impl PumpkinMetrics {
         let uuid = Uuid::new_v4();
 
         let mut metrics = Metrics::new("Pumpkin".to_string(), uuid.to_string(), false).await;
-        metrics.add_custom_chart(Box::new(SimplePie::new("minecraft_version", || {
-            return CURRENT_MC_VERSION.to_owned();
-        }))).await;
+        metrics
+            .add_custom_chart(Box::new(SimplePie::new("minecraft_version", || {
+                return CURRENT_MC_VERSION.to_owned();
+            })))
+            .await;
     }
 }

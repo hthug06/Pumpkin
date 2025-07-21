@@ -17,7 +17,7 @@ impl SimplePie {
 
 impl CustomChart for SimplePie {
     fn get_chart_data(&self) -> Option<Value> {
-        let value =(&self.callable)();
+        let value = (&self.callable)();
         //pass if null
         if !value.is_empty() {
             return None;

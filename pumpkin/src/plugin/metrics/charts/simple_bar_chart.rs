@@ -7,7 +7,7 @@ pub struct SimpleBarChart {
 }
 
 impl SimpleBarChart {
-    pub fn new(chart_id: &str, callable: fn () -> Map<String, Value>) -> Self {
+    pub fn new(chart_id: &str, callable: fn() -> Map<String, Value>) -> Self {
         SimpleBarChart {
             chart: Chart::new(chart_id).unwrap(),
             callable,
@@ -20,12 +20,7 @@ impl CustomChart for SimpleBarChart {
         let mut values = Map::new();
 
         // If 0, return None because don't add value with 0 into the chart
-        if Value::Object((self.callable)())
-            .as_object()
-            .unwrap()
-            .len()
-            == 0
-        {
+        if Value::Object((self.callable)()).as_object().unwrap().len() == 0 {
             return None;
         }
 

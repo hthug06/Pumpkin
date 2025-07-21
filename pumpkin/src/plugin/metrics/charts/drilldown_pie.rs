@@ -21,12 +21,7 @@ impl CustomChart for DrilldownPie {
         let mut values: Map<String, Value> = Map::new();
 
         // If 0, return None because don't add value with 0 into the chart
-        if Value::Object((self.callable)())
-            .as_object()
-            .unwrap()
-            .len()
-            == 0
-        {
+        if Value::Object((self.callable)()).as_object().unwrap().len() == 0 {
             return None;
         }
 
