@@ -1,28 +1,28 @@
 mod advanced_bar_chart;
 mod advanced_pie;
 mod drilldown_pie;
-mod multi_line_chart;
-mod simple_bar_chart;
-mod simple_pie;
-mod single_line_chart;
+pub mod multi_line_chart;
+pub mod simple_bar_chart;
+pub mod simple_pie;
+pub mod single_line_chart;
 
 use serde_json::{Value, json};
 // Trait because chart_data
 pub trait CustomChart {
-    async fn id(&self) -> &str {
+    fn id(&self) -> &str {
         ""
     }
-    async fn get_requested_json(&self) -> Option<Value> {
-        let data = self.get_chart_data().await;
+    fn get_requested_json(&self) -> Option<Value> {
+        let data = self.get_chart_data();
         if data == None {
             return None;
         }
         Some(json!({
-            "chartId": self.id().await.to_string(),
+            "chartId": self.id().to_string(),
             "data": data
         }))
     }
-    async fn get_chart_data(&self) -> Option<Value>;
+    fn get_chart_data(&self) -> Option<Value>;
 }
 
 // need this because they do a class in a class
@@ -43,7 +43,7 @@ impl Chart {
 
 //use this so the chart can get the id
 impl CustomChart for Chart {
-    async fn get_chart_data(&self) -> Option<Value> {
+    fn get_chart_data(&self) -> Option<Value> {
         Some(json!("")) // Not used so we don't care
     }
 }

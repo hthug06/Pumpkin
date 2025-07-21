@@ -1,6 +1,8 @@
 mod charts;
 
 use crate::SHOULD_STOP;
+use crate::plugin::metrics::charts::CustomChart;
+use crate::plugin::metrics::charts::simple_pie::SimplePie;
 use flate2::Compression;
 use flate2::write::GzEncoder;
 use os_info;
@@ -11,15 +13,16 @@ use std::sync::atomic::Ordering;
 use std::time::Duration;
 use tokio::time::interval;
 use uuid::Uuid;
+use crate::server::CURRENT_MC_VERSION;
 
 //Trying to replic Metrics.java from Paper
 pub struct Metrics {
     b_stats_version: u8,
     url: String,
     log_failed_request: bool,
-    name: String, // The name of the server software
-    uuid: String, // The uuid of the server
-                  //charts: [dyn CustomChart; 6] TODO only used for plugin
+    name: String,                      // The name of the server software
+    uuid: String,                      // The uuid of the server
+    charts: Vec<Box<dyn CustomChart>>, //All the created charts
 }
 
 impl Metrics {
@@ -30,8 +33,12 @@ impl Metrics {
             log_failed_request,
             name,
             uuid,
-            //charts: vec![],
+            charts: Vec::new(),
         }
+    }
+
+    async fn add_custom_chart(&mut self, chart: Box<dyn CustomChart>) {
+        self.charts.push(chart);
     }
 
     //Starts the Scheduler which submits our data every 30 minutes.
@@ -154,6 +161,9 @@ impl PumpkinMetrics {
         //TODO Create the config file
         let uuid = Uuid::new_v4();
 
-        let _metrics = Metrics::new("Pumpkin".to_string(), uuid.to_string(), false).await;
+        let mut metrics = Metrics::new("Pumpkin".to_string(), uuid.to_string(), false).await;
+        metrics.add_custom_chart(Box::new(SimplePie::new("minecraft_version", || {
+            return CURRENT_MC_VERSION.to_owned();
+        }))).await;
     }
 }

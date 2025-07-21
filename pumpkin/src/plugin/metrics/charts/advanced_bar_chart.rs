@@ -4,11 +4,11 @@ use serde_json::{Map, Value, json};
 
 pub struct AdvancedBarChart {
     chart: Chart,
-    callable: Map<String, Value>,
+    callable: fn() -> Map<String, Value>,
 }
 
 impl AdvancedBarChart {
-    pub fn new(chart_id: &str, callable: Map<String, Value>) -> Self {
+    pub fn new(chart_id: &str, callable: fn() -> Map<String, Value>) -> Self {
         AdvancedBarChart {
             chart: Chart::new(chart_id).unwrap(),
             callable,
@@ -17,11 +17,11 @@ impl AdvancedBarChart {
 }
 
 impl CustomChart for AdvancedBarChart {
-    async fn get_chart_data(&self) -> Option<Value> {
+    fn get_chart_data(&self) -> Option<Value> {
         let mut values = Map::new();
 
         // If 0, return None because don't add value with 0 into the chart
-        if Value::Object(self.callable.clone())
+        if Value::Object((self.callable)())
             .as_object()
             .unwrap()
             .len()
@@ -34,7 +34,7 @@ impl CustomChart for AdvancedBarChart {
         let mut all_skipped = true;
 
         //add all to values
-        for (k, v) in Value::Object(self.callable.clone()).as_object().unwrap() {
+        for (k, v) in Value::Object((self.callable)()).as_object().unwrap() {
             //don't add value that are equal to 0
             if v.as_i64().iter().len() == 0 {
                 continue;

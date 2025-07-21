@@ -16,7 +16,7 @@ impl MultiLineChart {
 }
 
 impl CustomChart for MultiLineChart {
-    async fn get_chart_data(&self) -> Option<Value> {
+    fn get_chart_data(&self) -> Option<Value> {
         let mut values = Map::new();
 
         // If 0, return None because don't add value with 0 into the chart

@@ -16,7 +16,7 @@ impl SingleLineChart {
 }
 
 impl CustomChart for SingleLineChart {
-    async fn get_chart_data(&self) -> Option<Value> {
+    fn get_chart_data(&self) -> Option<Value> {
         if self.callable == Value::Number(Number::from(0)) {
             return None;
         }

@@ -16,7 +16,7 @@ impl AdvancedPie {
 }
 
 impl CustomChart for AdvancedPie {
-    async fn get_chart_data(&self) -> Option<Value> {
+    fn get_chart_data(&self) -> Option<Value> {
         //create a Map for all the value inside the chart
         let mut values = Map::new();
 
