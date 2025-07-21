@@ -17,12 +17,12 @@ impl SingleLineChart {
 
 impl CustomChart for SingleLineChart {
     fn get_chart_data(&self) -> Option<Value> {
-        if (self.callable()) == 0 {
+        if (self.callable)() == 0 {
             return None;
         }
         //finally, return all the data
         Some(json!({
-            "value": self.callable.to_string(),
+            "value": (self.callable)(),
         }))
     }
 }

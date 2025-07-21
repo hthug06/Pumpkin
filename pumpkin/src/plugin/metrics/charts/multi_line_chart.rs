@@ -20,7 +20,7 @@ impl CustomChart for MultiLineChart {
         let mut values = Map::new();
 
         // If 0, return None because don't add value with 0 into the chart
-        if Value::Object(self.callable())
+        if Value::Object((self.callable)())
             .as_object()
             .unwrap()
             .len()
@@ -33,7 +33,7 @@ impl CustomChart for MultiLineChart {
         let mut all_skipped = true;
 
         //add all to values
-        for (k, v) in Value::Object(self.callable.clone()).as_object().unwrap() {
+        for (k, v) in Value::Object((self.callable)()).as_object().unwrap() {
             if v == 0 {
                 continue;
             }
