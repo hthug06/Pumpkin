@@ -2221,6 +2221,7 @@ dependencies = [
  "rsa-der",
  "rustc-hash 2.1.1",
  "rustyline-async",
+ "scheduling",
  "serde",
  "serde_json",
  "sha1",
@@ -2772,6 +2773,12 @@ checksum = "1f29ebaa345f945cec9fbbc532eb307f0fdad8161f281b6369539c8d84876b3d"
 dependencies = [
  "windows-sys 0.59.0",
 ]
+
+[[package]]
+name = "scheduling"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "882afc2320b88d0e5303c0569da54cfa0857452e1c059d2c6bbd339a76f5062b"
 
 [[package]]
 name = "scopeguard"

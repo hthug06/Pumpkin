@@ -11,17 +11,19 @@ use reqwest::Error;
 use serde_json::{Map, json, Value, Number};
 use std::io::Write;
 use std::process::Command;
+use std::sync::{Arc, Mutex};
 use std::sync::atomic::Ordering;
 use std::time::Duration;
 use rand::Rng;
 use tokio::time::interval;
 use uuid::Uuid;
 use pumpkin_config::BASIC_CONFIG;
+use scheduling;
 use crate::plugin::metrics::charts::single_line_chart::SingleLineChart;
 
 //Trying to replic Metrics.java from Paper
 pub struct Metrics<'a> {
-    server: &'a Server,
+    server: &'a Arc<Server>,
     b_stats_version: u8,
     url: String,
     log_failed_request: bool,
@@ -31,8 +33,8 @@ pub struct Metrics<'a> {
 }
 
 impl<'a> Metrics<'a>{
-    async fn new(name: String, uuid: String, log_failed_request: bool, server: &'a Server) -> Self {
-        let m = Metrics {
+    async fn new(name: String, uuid: String, log_failed_request: bool, server: &'a Arc<Server>) -> Self {
+        Metrics {
             server,
             b_stats_version: 1,
             url: "https://bstats.org/submitData/server-implementation".to_string(),
@@ -40,11 +42,7 @@ impl<'a> Metrics<'a>{
             name,
             uuid,
             charts: Vec::new(),
-        };
-
-        m.start_submitting().await;
-
-        m
+        }
     }
 
     async fn add_custom_chart(&mut self, chart: Box<dyn CustomChart>) {
@@ -61,6 +59,22 @@ impl<'a> Metrics<'a>{
         let second_delay = 1000.0 * 60.0 * (3.0 + rand::rng().random_range(0.0..1.0) * 30.0);
         log::info!("metrics : second_delay: {}", second_delay);
 
+        tokio::spawn(async {
+            let initial_delay = 1000.0 * 60.0 * (3.0 + rand::rng().random_range(0.0..1.0) * 3.0);
+            tokio::time::sleep(Duration::from_millis(initial_delay as u64)).await;
+            self.start_submitting().await;  //can't use self here whyyyy
+        });
+
+        tokio::spawn(async {
+            let mut interval = interval(Duration::from_millis(1000 * 60 * 30));
+            loop {
+                interval.tick().await; //Wait for next tick
+                self.submit_data().await;
+            }
+
+        });
+
+/*
         // Wait for a short duration
         tokio::time::sleep(Duration::from_millis(initial_delay as u64)).await;
         self.submit_data().await;
@@ -73,7 +87,7 @@ impl<'a> Metrics<'a>{
             if !SHOULD_STOP.load(Ordering::Relaxed) {
                 self.submit_data().await;
             }
-        }
+        }*/
     }
 
     //Gets the plugin specific data.
@@ -135,9 +149,7 @@ impl<'a> Metrics<'a>{
             data.ok_or("Data can't be null for bstats")
                 .unwrap()
                 .to_string(),
-        )
-        .await;
-
+        );
         // Add headers and send data
         let _request = client
             .post(self.url.as_str())
@@ -145,7 +157,7 @@ impl<'a> Metrics<'a>{
                 "Accept": "application/json",
                 "Connection": "close",
                 "Content-Encoding": "gzip",
-                "Content-Length": compressed_data.len(),
+                "Content-Length": compressed_data.await.len(),
                 "Content-Type": "application/json",
                 "User-Agent": "MC-Server/".to_owned() + self.b_stats_version.to_string().as_str()
             }))
@@ -176,13 +188,13 @@ impl<'a> Metrics<'a>{
 pub struct PumpkinMetrics;
 
 impl PumpkinMetrics {
-    pub async fn start_metrics(server: &Server) {
+    pub async fn start_metrics(server: &Arc<Server>) {
         log::info!("Starting metrics server");
         //TODO Create the config file
         let uuid = Uuid::new_v4();
 
-        let mut metrics =
-            Metrics::new("Pumpkin".to_string(), uuid.to_string(), false, server).await;
+        let mut metrics = Metrics::new("Pumpkin".to_string(), uuid.to_string(), false, server).await;
+        metrics.start_submitting().await;
 
         log::info!("metrics::new passed");
         metrics
