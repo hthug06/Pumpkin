@@ -8,6 +8,7 @@ use flate2::Compression;
 use flate2::write::GzEncoder;
 use os_info;
 use reqwest::Error;
+use once_cell::sync::Lazy;
 use serde_json::{Map, json, Value, Number};
 use std::io::Write;
 use std::process::Command;
@@ -15,10 +16,11 @@ use std::sync::{Arc, Mutex};
 use std::sync::atomic::Ordering;
 use std::time::Duration;
 use rand::Rng;
-use tokio::time::interval;
+use tokio::time::{interval, sleep};
 use uuid::Uuid;
 use pumpkin_config::BASIC_CONFIG;
 use scheduling;
+use tokio::runtime::Runtime;
 use crate::plugin::metrics::charts::single_line_chart::SingleLineChart;
 
 //Trying to replic Metrics.java from Paper
@@ -50,7 +52,11 @@ impl<'a> Metrics<'a>{
     }
 
     //Starts the Scheduler which submits our data every 30 minutes.
-    async fn start_submitting(&self) {
+    async fn start_submitting(&'static self) {
+
+        let tokio_runtime: Lazy<Runtime> =
+            Lazy::new(|| Runtime::new().expect("Failed to create global Tokio Runtime"));
+
 
         log::info!("metrics : start submitting");
 
@@ -59,35 +65,16 @@ impl<'a> Metrics<'a>{
         let second_delay = 1000.0 * 60.0 * (3.0 + rand::rng().random_range(0.0..1.0) * 30.0);
         log::info!("metrics : second_delay: {}", second_delay);
 
-        tokio::spawn(async {
-            let initial_delay = 1000.0 * 60.0 * (3.0 + rand::rng().random_range(0.0..1.0) * 3.0);
-            tokio::time::sleep(Duration::from_millis(initial_delay as u64)).await;
-            self.start_submitting().await;  //can't use self here whyyyy
-        });
+        tokio_runtime.spawn(async move {
+            sleep(Duration::from_millis(initial_delay as u64)).await;
+            self.submit_data().await;
+            sleep(Duration::from_millis(second_delay as u64)).await;
+            loop{
+                log::info!("metrics : submit data");
+                sleep(Duration::from_millis(1000*60*30)).await;
 
-        tokio::spawn(async {
-            let mut interval = interval(Duration::from_millis(1000 * 60 * 30));
-            loop {
-                interval.tick().await; //Wait for next tick
-                self.submit_data().await;
             }
-
         });
-
-/*
-        // Wait for a short duration
-        tokio::time::sleep(Duration::from_millis(initial_delay as u64)).await;
-        self.submit_data().await;
-        tokio::time::sleep(Duration::from_millis(second_delay as u64)).await;
-
-        let mut interval = interval(Duration::from_millis(1000 * 60 * 30));
-
-        loop {
-            interval.tick().await;
-            if !SHOULD_STOP.load(Ordering::Relaxed) {
-                self.submit_data().await;
-            }
-        }*/
     }
 
     //Gets the plugin specific data.

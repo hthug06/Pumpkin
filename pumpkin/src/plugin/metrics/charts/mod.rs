@@ -8,7 +8,7 @@ pub mod single_line_chart;
 
 use serde_json::{Value, json};
 // Trait because chart_data
-pub trait CustomChart {
+pub trait CustomChart: Send + Sync {
     fn id(&self) -> &str {
         ""
     }

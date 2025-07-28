@@ -2204,6 +2204,7 @@ dependencies = [
  "log",
  "num-bigint",
  "num_cpus",
+ "once_cell",
  "os_info",
  "pumpkin-config",
  "pumpkin-data",
