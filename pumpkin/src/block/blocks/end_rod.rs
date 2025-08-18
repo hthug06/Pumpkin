@@ -44,9 +44,9 @@ impl BlockBehaviour for EndRodBlock {
 
         let mut random = StdRng::from_os_rng();
 
-        let x = args.position.0.x as f64 + 0.55 - (random.random::<f64>() * 0.1);
-        let y = args.position.0.y as f64 + 0.55 - (random.random::<f64>() * 0.1);
-        let z = args.position.0.z as f64 + 0.55 - (random.random::<f64>() * 0.1);
+        let x = f64::from(args.position.0.x) + 0.55 - (random.random::<f64>() * 0.1);
+        let y = f64::from(args.position.0.y) + 0.55 - (random.random::<f64>() * 0.1);
+        let z = f64::from(args.position.0.z) + 0.55 - (random.random::<f64>() * 0.1);
 
         let offset = 0.4 - (random.random::<f64>() + random.random::<f64>()) * 0.4;
 
@@ -54,9 +54,9 @@ impl BlockBehaviour for EndRodBlock {
             args.world
                 .spawn_particle(
                     Vector3::new(
-                        (x + direction.to_offset().x as f64) * offset,
-                        (y + direction.to_offset().y as f64) * offset,
-                        (z + direction.to_offset().z as f64) * offset,
+                        (x + f64::from(direction.to_offset().x)) * offset,
+                        (y + f64::from(direction.to_offset().y)) * offset,
+                        (z + f64::from(direction.to_offset().z)) * offset,
                     ),
                     Vector3::new(0.0, 0.0, 0.0),
                     5.0,
