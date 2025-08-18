@@ -127,6 +127,7 @@ use crate::block::blocks::jukebox::JukeboxBlock;
 use crate::block::blocks::ladder::LadderBlock;
 use crate::block::blocks::lanterns::LanternBlock;
 use crate::block::blocks::lectern::LecternBlock;
+use crate::block::blocks::plant::glow_lichen::GlowLichenBlock;
 use crate::block::blocks::shulker_box::ShulkerBoxBlock;
 use crate::block::blocks::skull_block::SkullBlock;
 use crate::block::blocks::smoker::SmokerBlock;
@@ -212,6 +213,7 @@ pub fn default_registry() -> Arc<BlockRegistry> {
     manager.register(AttachedStemBlock);
     manager.register(ChainBlock);
     manager.register(LanternBlock);
+    manager.register(GlowLichenBlock);
 
     manager.register(FallingBlock);
 

@@ -18,6 +18,7 @@ pub mod sea_pickles;
 pub mod segmented;
 pub mod short_plant;
 pub mod tall_plant;
+pub mod glow_lichen;
 
 trait PlantBlockBase {
     async fn can_plant_on_top(&self, block_accessor: &dyn BlockAccessor, pos: &BlockPos) -> bool {
