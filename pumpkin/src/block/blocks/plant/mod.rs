@@ -17,6 +17,7 @@ pub mod sea_grass;
 pub mod sea_pickles;
 pub mod segmented;
 pub mod short_plant;
+pub mod sweet_berry_bush;
 pub mod tall_plant;
 
 trait PlantBlockBase {
