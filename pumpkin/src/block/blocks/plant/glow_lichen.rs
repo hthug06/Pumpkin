@@ -2,8 +2,11 @@ use async_trait::async_trait;
 use pumpkin_data::block_properties::{BlockProperties, GlowLichenLikeProperties};
 use pumpkin_data::BlockDirection;
 use pumpkin_macros::pumpkin_block;
+use pumpkin_util::math::position::BlockPos;
 use pumpkin_world::BlockStateId;
+use pumpkin_world::generation::Direction;
 use crate::block::{BlockBehaviour, BlockIsReplacing, CanPlaceAtArgs, CanUpdateAtArgs, OnPlaceArgs};
+use crate::world::World;
 
 #[pumpkin_block("minecraft:glow_lichen")]
 pub struct GlowLichenBlock;
@@ -20,8 +23,15 @@ fn glow_lichen_placement(mut property: GlowLichenLikeProperties, block_direction
     property
 }
 
+async fn can_grow_on(world: &World, mut pos: &BlockPos, dir: BlockDirection) -> bool{
+    let new_pos = &pos.offset(dir.to_offset());
+    let blockstate = world.get_block_state(new_pos).await;
+    blockstate.is_side_solid(dir.opposite())
+
+}
+
 #[async_trait]
-impl BlockBehaviour for  GlowLichenBlock{
+impl BlockBehaviour for GlowLichenBlock{
 
     async fn on_place(&self, args: OnPlaceArgs<'_>) -> BlockStateId {
 
@@ -39,11 +49,18 @@ impl BlockBehaviour for  GlowLichenBlock{
         props.to_state_id(args.block)
     }
 
-    async fn can_update_at(&self, _args: CanUpdateAtArgs<'_>) -> bool {
-        true
+    async fn can_place_at(&self, args: CanPlaceAtArgs<'_>) -> bool {
+        let mut bl = false;
+        for dir in BlockDirection::all(){
+            if !can_grow_on(args.world.unwrap(), args.position, dir).await {
+                return false;
+            }
+            bl = true;
+        }
+        bl
     }
 
-    async fn can_place_at(&self, args: CanPlaceAtArgs<'_>) -> bool {
-        todo!()
+    async fn can_update_at(&self, _args: CanUpdateAtArgs<'_>) -> bool {
+        true
     }
 }
