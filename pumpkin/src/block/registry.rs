@@ -128,6 +128,7 @@ use crate::block::blocks::jukebox::JukeboxBlock;
 use crate::block::blocks::ladder::LadderBlock;
 use crate::block::blocks::lanterns::LanternBlock;
 use crate::block::blocks::lectern::LecternBlock;
+use crate::block::blocks::plant::sweet_berry_bush::SweetBerryBushBlock;
 use crate::block::blocks::shulker_box::ShulkerBoxBlock;
 use crate::block::blocks::skull_block::SkullBlock;
 use crate::block::blocks::smoker::SmokerBlock;
@@ -248,6 +249,7 @@ pub fn default_registry() -> Arc<BlockRegistry> {
     manager.register(DropperBlock);
     manager.register(DispenserBlock);
     manager.register(LadderBlock);
+    manager.register(SweetBerryBushBlock);
 
     // Rails
     manager.register(RailBlock);
